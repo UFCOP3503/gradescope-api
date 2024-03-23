@@ -18,10 +18,28 @@ GRADESCOPE_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 class GradescopeAssignment:
-    def __init__(self, _client: GradescopeClient, _course: GradescopeCourse, assignment_id: str) -> None:
+
+    _course: GradescopeCourse
+    assignment_id: str
+    title: str | None
+    due_date: datetime | None
+
+    def __init__(self, _client: GradescopeClient, _course: GradescopeCourse, assignment_id: str, title: str | None = None, due_date: datetime | None = None) -> None:
         self._client = _client
         self._course = _course
         self.assignment_id = assignment_id
+        self.title = title
+        self.due_date = due_date
+
+    def __str__(self) -> str:
+        return f"GradescopeAssignment(_course='{self._course}', assignment_id='{self.assignment_id}', title='{self.title}')"
+
+    __repr__ = __str__
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, GradescopeAssignment):
+            return False
+        return self.assignment_id == o.assignment_id
 
     def get_url(self) -> str:
         return self._course.get_url() + f"/assignments/{self.assignment_id}"

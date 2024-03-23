@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import json
 from typing import TYPE_CHECKING, Optional
 
@@ -54,6 +55,36 @@ class GradescopeCourse:
                     )
 
         return self.roster
+
+    def get_assignments(self) -> list[GradescopeAssignment]:
+        url = self.get_url() + "/assignments"
+        response = self._client.session.get(url=url, timeout=20)
+        check_response(response, "failed to get assignments")
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        props = soup.find("div", {"data-react-class": "AssignmentsTable"})[
+            "data-react-props"
+        ]
+        data = json.loads(props)
+        assignments = []
+        for row in data.get("table_data", []):
+            id = (
+                str(row["id"][row["id"].rfind("_") + 1 :])
+                if "id" in row and "_" in row["id"]
+                else ""
+            )
+            due_date = datetime.datetime.fromtimestamp(row["due_date"]) if "due_date" in row else None
+            assignments.append(
+                GradescopeAssignment(
+                    _client=self._client,
+                    _course=self,
+                    assignment_id=id,
+                    title=row["title"],
+                    due_date=due_date,
+                ),
+            )
+
+        return assignments
 
     def get_student(
         self, sid: Optional[str] = None, email: Optional[str] = None,
