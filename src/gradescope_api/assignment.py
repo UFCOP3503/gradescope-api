@@ -52,7 +52,7 @@ class GradescopeAssignment:
 
         # A helper method to transform the date
         def transform_date(datestr: str):
-            dt = pytz.timezone("US/Pacific").localize(parse(datestr))
+            dt = pytz.timezone("US/Eastern").localize(parse(datestr))
             dt = dt + timedelta(num_days)
             return dt.astimezone(pytz.utc)
 

@@ -1,5 +1,5 @@
+
 from requests import Response
-import json
 
 
 class GradescopeAPIError(Exception):
@@ -25,5 +25,9 @@ def check_response(response: Response, error: str):
             + "Error: "
             + str(error)
             + "\n"
-            "Request: " + str(vars(response.request)) + "\n" + "Response: " + str(response.content)
+            "Request: "
+            + str(vars(response.request))
+            + "\n"
+            + "Response: "
+            + str(response.content),
         )

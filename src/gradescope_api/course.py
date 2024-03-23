@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from bs4 import BeautifulSoup
+
+from gradescope_api.assignment import GradescopeAssignment
 from gradescope_api.errors import check_response
 from gradescope_api.student import GradescopeStudent
-from gradescope_api.assignment import GradescopeAssignment
 from gradescope_api.utils import get_url_id
 
 if TYPE_CHECKING:
@@ -17,12 +18,12 @@ class GradescopeCourse:
     def __init__(self, _client: GradescopeClient, course_id: str) -> None:
         self._client = _client
         self.course_id = course_id
-        self.roster: List[GradescopeStudent] = []
+        self.roster: list[GradescopeStudent] = []
 
     def get_url(self) -> str:
         return self._client.get_base_url() + f"/courses/{self.course_id}"
 
-    def get_roster(self) -> List[GradescopeStudent]:
+    def get_roster(self) -> list[GradescopeStudent]:
         if self.roster:
             return self.roster
 
@@ -39,7 +40,7 @@ class GradescopeCourse:
                 editButton = row.find("button", class_="rosterCell--editIcon")
                 if editButton:
                     data_email = editButton["data-email"]
-                    data_cm: Dict = json.loads(editButton["data-cm"])
+                    data_cm: dict = json.loads(editButton["data-cm"])
                     self.roster.append(
                         GradescopeStudent(
                             _client=self._client,
@@ -49,12 +50,14 @@ class GradescopeCourse:
                             last_name=data_cm.get("last_name"),
                             sid=data_cm.get("sid"),
                             email=data_email,
-                        )
+                        ),
                     )
 
         return self.roster
 
-    def get_student(self, sid: Optional[str] = None, email: Optional[str] = None) -> Optional[GradescopeStudent]:
+    def get_student(
+        self, sid: Optional[str] = None, email: Optional[str] = None,
+    ) -> Optional[GradescopeStudent]:
         assert sid or email
         roster = self.get_roster()
         for student in roster:
@@ -65,8 +68,12 @@ class GradescopeCourse:
         return None
 
     def get_assignment(
-        self, assignment_id: Optional[str] = None, assignment_url: Optional[str] = None
+        self, assignment_id: Optional[str] = None, assignment_url: Optional[str] = None,
     ) -> Optional[GradescopeAssignment]:
         assert assignment_id or assignment_url
-        assignment_id = assignment_id or get_url_id(url=assignment_url, kind="assignments")
-        return GradescopeAssignment(_client=self._client, _course=self, assignment_id=assignment_id)
+        assignment_id = assignment_id or get_url_id(
+            url=assignment_url, kind="assignments",
+        )
+        return GradescopeAssignment(
+            _client=self._client, _course=self, assignment_id=assignment_id,
+        )

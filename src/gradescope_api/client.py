@@ -1,10 +1,10 @@
-from time import time
 from typing import Any, Optional
-from bs4 import BeautifulSoup
-import requests
-from requests import Response
-from gradescope_api.course import GradescopeCourse
 
+import requests
+from bs4 import BeautifulSoup
+from requests import Response
+
+from gradescope_api.course import GradescopeCourse
 from gradescope_api.errors import check_response
 from gradescope_api.utils import get_url_id
 
@@ -22,7 +22,11 @@ class GradescopeClient:
         return BASE_URL
 
     def _get_token(
-        self, url: str, action: Optional[Any] = None, meta: Optional[Any] = None, content: Optional[Any] = None
+        self,
+        url: str,
+        action: Optional[Any] = None,
+        meta: Optional[Any] = None,
+        content: Optional[Any] = None,
     ) -> str:
         """
         Return the Gradescope authenticity token.
@@ -53,10 +57,16 @@ class GradescopeClient:
     ) -> Response:
         if not referer_url:
             referer_url = url
-        headers = {"Host": "www.gradescope.com", "Origin": "https://www.gradescope.com", "Referer": referer_url}
+        headers = {
+            "Host": "www.gradescope.com",
+            "Origin": "https://www.gradescope.com",
+            "Referer": referer_url,
+        }
         if header_token is not None:
             headers["X-CSRF-Token"] = header_token
-        return self.session.post(url, data=data, json=json, files=files, headers=headers, timeout=20)
+        return self.session.post(
+            url, data=data, json=json, files=files, headers=headers, timeout=20,
+        )
 
     def _log_in(self, email: str, password: str):
         url = BASE_URL + "/login"
@@ -73,6 +83,8 @@ class GradescopeClient:
         response = self.submit_form(url=url, data=payload)
         check_response(response, error="failed to log in")
 
-    def get_course(self, course_url: Optional[str] = None, course_id: Optional[str] = None):
+    def get_course(
+        self, course_url: Optional[str] = None, course_id: Optional[str] = None,
+    ):
         course_id = course_id or get_url_id(course_url, "courses")
         return GradescopeCourse(_client=self, course_id=course_id)
