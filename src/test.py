@@ -16,13 +16,6 @@ async def main():
             course_url="https://www.gradescope.com/courses/735697/",
         )
         print(await course.get_assignments())
-        assignment = course.get_assignment(
-            assignment_url="https://www.gradescope.com/courses/735697/assignments/4191897/review_grades",
-        )
-        if assignment:
-            await assignment.apply_extension("abigail@cbrxyz.com", 1)
-        else:
-            print("No assignment found!")
 
 
 asyncio.run(main())

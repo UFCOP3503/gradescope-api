@@ -73,9 +73,10 @@ class GradescopeCourse:
                 if "id" in row and "_" in row["id"]
                 else ""
             )
+            print(row)
             due_date = (
-                datetime.datetime.fromtimestamp(row["due_date"])
-                if "due_date" in row
+                datetime.datetime.fromisoformat(row["submission_window"]["due_date"])
+                if "submission_window" in row and "due_date" in row["submission_window"]
                 else None
             )
             assignments.append(

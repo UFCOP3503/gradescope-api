@@ -21,10 +21,10 @@ class GradescopeAssignment:
 
     _course: GradescopeCourse
     assignment_id: str
-    title: str | None
+    title: str
     due_date: datetime | None
 
-    def __init__(self, _client: GradescopeClient, _course: GradescopeCourse, assignment_id: str, title: str | None = None, due_date: datetime | None = None) -> None:
+    def __init__(self, _client: GradescopeClient, _course: GradescopeCourse, assignment_id: str, title: str, due_date: datetime | None) -> None:
         self._client = _client
         self._course = _course
         self.assignment_id = assignment_id
@@ -44,7 +44,7 @@ class GradescopeAssignment:
     def get_url(self) -> str:
         return self._course.get_url() + f"/assignments/{self.assignment_id}"
 
-    async def apply_extension(self, email: str, num_days: int):
+    async def apply_extension(self, email: str, amount: timedelta):
         """
         A new method to apply an extension to a Gradescope assignment, given an email and a number of days.
         """
@@ -71,7 +71,7 @@ class GradescopeAssignment:
         # A helper method to transform the date
         def transform_date(datestr: str):
             dt = pytz.timezone("US/Eastern").localize(parse(datestr))
-            dt = dt + timedelta(num_days)
+            dt = dt + amount
             return dt.astimezone(pytz.utc)
 
         assignment = data["assignment"]
