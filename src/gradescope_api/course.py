@@ -24,15 +24,15 @@ class GradescopeCourse:
     def get_url(self) -> str:
         return self._client.get_base_url() + f"/courses/{self.course_id}"
 
-    def get_roster(self) -> list[GradescopeStudent]:
+    async def get_roster(self) -> list[GradescopeStudent]:
         if self.roster:
             return self.roster
 
         url = self._client.get_base_url() + f"/courses/{self.course_id}/memberships"
-        response = self._client.session.get(url=url, timeout=20)
-        check_response(response, "failed to get roster")
+        response = await self._client.session.get(url=url, timeout=20)
+        await check_response(response, "failed to get roster")
 
-        soup = BeautifulSoup(response.content, "html.parser")
+        soup = BeautifulSoup(await response.content.read(), "html.parser")
         for row in soup.find_all("tr", class_="rosterRow"):
             nameButton = row.find("button", class_="js-rosterName")
             role = row.find("option", selected=True).text
@@ -56,12 +56,12 @@ class GradescopeCourse:
 
         return self.roster
 
-    def get_assignments(self) -> list[GradescopeAssignment]:
+    async def get_assignments(self) -> list[GradescopeAssignment]:
         url = self.get_url() + "/assignments"
-        response = self._client.session.get(url=url, timeout=20)
-        check_response(response, "failed to get assignments")
+        response = await self._client.session.get(url=url, timeout=20)
+        await check_response(response, "failed to get assignments")
 
-        soup = BeautifulSoup(response.content, "html.parser")
+        soup = BeautifulSoup(await response.content.read(), "html.parser")
         props = soup.find("div", {"data-react-class": "AssignmentsTable"})[
             "data-react-props"
         ]
@@ -73,7 +73,11 @@ class GradescopeCourse:
                 if "id" in row and "_" in row["id"]
                 else ""
             )
-            due_date = datetime.datetime.fromtimestamp(row["due_date"]) if "due_date" in row else None
+            due_date = (
+                datetime.datetime.fromtimestamp(row["due_date"])
+                if "due_date" in row
+                else None
+            )
             assignments.append(
                 GradescopeAssignment(
                     _client=self._client,
@@ -86,25 +90,32 @@ class GradescopeCourse:
 
         return assignments
 
-    def get_student(
-        self, sid: Optional[str] = None, email: Optional[str] = None,
+    async def get_student(
+        self,
+        sid: Optional[str] = None,
+        email: Optional[str] = None,
     ) -> Optional[GradescopeStudent]:
         assert sid or email
-        roster = self.get_roster()
+        roster = await self.get_roster()
         for student in roster:
-            if sid != None and student.sid == sid:
+            if sid is not None and student.sid == sid:
                 return student
-            if email != None and student.email == email:
+            if email is not None and student.email == email:
                 return student
         return None
 
     def get_assignment(
-        self, assignment_id: Optional[str] = None, assignment_url: Optional[str] = None,
+        self,
+        assignment_id: Optional[str] = None,
+        assignment_url: Optional[str] = None,
     ) -> Optional[GradescopeAssignment]:
         assert assignment_id or assignment_url
         assignment_id = assignment_id or get_url_id(
-            url=assignment_url, kind="assignments",
+            url=assignment_url,
+            kind="assignments",
         )
         return GradescopeAssignment(
-            _client=self._client, _course=self, assignment_id=assignment_id,
+            _client=self._client,
+            _course=self,
+            assignment_id=assignment_id,
         )

@@ -44,7 +44,7 @@ class GradescopeAssignment:
     def get_url(self) -> str:
         return self._course.get_url() + f"/assignments/{self.assignment_id}"
 
-    def apply_extension(self, email: str, num_days: int):
+    async def apply_extension(self, email: str, num_days: int):
         """
         A new method to apply an extension to a Gradescope assignment, given an email and a number of days.
         """
@@ -52,13 +52,13 @@ class GradescopeAssignment:
         # the due date (and hard due date) for the assignment.
         course_id = self._course.course_id
         assignment_id = self.assignment_id
-        response = self._client.session.get(
+        response = await self._client.session.get(
             f"https://www.gradescope.com/courses/{course_id}/assignments/{assignment_id}/extensions", timeout=20
         )
-        check_response(response, "could not load assignment")
+        await check_response(response, "could not load assignment")
 
         # Once we fetch the page, parse out the data (students + due dates)
-        soup = BeautifulSoup(response.content, "html.parser")
+        soup = BeautifulSoup(await response.content.read(), "html.parser")
         props = soup.find(
             "li", {"data-react-class": "AddExtension"})["data-react-props"]
         data = json.loads(props)
@@ -86,7 +86,7 @@ class GradescopeAssignment:
             "Host": "www.gradescope.com",
             "Origin": "https://www.gradescope.com",
             "Referer": url,
-            "X-CSRF-Token": self._client._get_token(url, meta="csrf-token"),
+            "X-CSRF-Token": await self._client._get_token(url, meta="csrf-token"),
         }
         payload = {
             "override": {
@@ -103,12 +103,12 @@ class GradescopeAssignment:
                         "value": new_hard_due_date.strftime(GRADESCOPE_DATETIME_FORMAT),
             }
 
-        response = self._client.session.post(
+        response = await self._client.session.post(
             url, headers=headers, json=payload, timeout=20)
-        check_response(response, "creating an extension failed")
+        await check_response(response, "creating an extension failed")
 
     # deprecated
-    def create_extension(self, user_id: str, due_date: datetime, hard_due_date: Optional[datetime] = None):
+    async def create_extension(self, user_id: str, due_date: datetime, hard_due_date: Optional[datetime] = None):
         """
         Create an extension for a student for this particular assignment. If a hard due date is not provided,
         the hard due date will be set to the provided due date. This behavior is temporary and should be changed
@@ -122,7 +122,7 @@ class GradescopeAssignment:
             "Host": "www.gradescope.com",
             "Origin": "https://www.gradescope.com",
             "Referer": url,
-            "X-CSRF-Token": self._client._get_token(url, meta="csrf-token"),
+            "X-CSRF-Token": await self._client._get_token(url, meta="csrf-token"),
         }
         payload = {
             "override": {
@@ -137,6 +137,6 @@ class GradescopeAssignment:
             }
         }
 
-        response = self._client.session.post(
+        response = await self._client.session.post(
             url, headers=headers, json=payload, timeout=20)
-        check_response(response, "creating an extension failed")
+        await check_response(response, "creating an extension failed")

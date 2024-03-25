@@ -1,5 +1,4 @@
-from requests import Response
-import json
+from aiohttp import ClientResponse
 
 
 class GradescopeAPIError(Exception):
@@ -14,16 +13,20 @@ class RequestError(GradescopeAPIError):
     pass
 
 
-def check_response(response: Response, error: str):
+async def check_response(response: ClientResponse, error: str):
     if not response.ok:
         raise RequestError(
             "An error occurred in a request to Gradescope servers. Details: "
             + "\n"
             + "Status Code: "
-            + str(response.status_code)
+            + str(response.status)
             + "\n"
             + "Error: "
             + str(error)
             + "\n"
-            "Request: " + str(vars(response.request)) + "\n" + "Response: " + str(response.content)
+            "Request: "
+            + str(response.request_info)
+            + "\n"
+            + "Response: "
+            + str(await response.content.read()),
         )
