@@ -74,8 +74,12 @@ class GradescopeCourse:
                 else ""
             )
             due_date = (
-                datetime.datetime.fromisoformat(row["submission_window"]["due_date"]).astimezone()
-                if "submission_window" in row and "due_date" in row["submission_window"]
+                datetime.datetime.fromisoformat(
+                    row["submission_window"]["due_date"],
+                ).astimezone()
+                if "submission_window" in row
+                and "due_date" in row["submission_window"]
+                and isinstance(row["submission_window"]["due_date"], str)
                 else None
             )
             assignments.append(
