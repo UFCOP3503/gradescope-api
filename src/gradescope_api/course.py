@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pytz import timezone
 import datetime
 import json
 from typing import TYPE_CHECKING, Optional
@@ -73,10 +74,11 @@ class GradescopeCourse:
                 if "id" in row and "_" in row["id"]
                 else ""
             )
+            # Due date is a iso string in EST timezone
             due_date = (
                 datetime.datetime.fromisoformat(
                     row["submission_window"]["due_date"],
-                ).astimezone()
+                ).replace(tzinfo=timezone("US/Eastern"))
                 if "submission_window" in row
                 and "due_date" in row["submission_window"]
                 and isinstance(row["submission_window"]["due_date"], str)
